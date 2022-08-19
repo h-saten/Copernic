@@ -1,0 +1,47 @@
+name: Deploy files by FTP to dev/prod
+on:
+  push:
+    branches:
+      - main
+     
+jobs:
+  Deploy-webpage-by-FTP-dev:
+    name: FTP-Deploy-Dev-Action
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+    - uses: actions/checkout@v2.1.0
+      with:
+        fetch-depth: 2
+    - name: FTP-Deploy-Dev-Action
+      uses: SamKirkland/FTP-Deploy-Action@3.1.1
+      with:
+        ftp-server: ${{ secrets.FTP_SERVER }}/public_html/dev
+        ftp-username: ${{ secrets.FTP_USERNAME }}
+        ftp-password: ${{ secrets.FTP_PASSWORD }}
+    - name: Clear-cloudflare-cache-curl
+      run: |
+        curl -X POST "https://api.cloudflare.com/client/v4/zones/c6b3b6edea51ef07edc6c9fe51cb7970/purge_cache" -H "Authorization: Bearer zM-X01vOL97F6n4v8FpDeCspgtImoRYfCCedfTOI" \
+          -H "Content-Type: application/json" \
+          --data '{"purge_everything":true}' \
+  Deploy-webpage-by-FTP-prod:
+    needs: [Deploy-webpage-by-FTP-dev]
+    if: ${{ always() && contains(needs.*.result, 'success') && !(contains(needs.*.result, 'failure')) }}
+    name: FTP-Deploy-Action
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+    - uses: actions/checkout@v2.1.0
+      with:
+        fetch-depth: 2
+    - name: FTP-Deploy-Action
+      uses: SamKirkland/FTP-Deploy-Action@3.1.1
+      with:
+        ftp-server: ${{ secrets.FTP_SERVER }}/public_html
+        ftp-username: ${{ secrets.FTP_USERNAME }}
+        ftp-password: ${{ secrets.FTP_PASSWORD }}
+    - name: Clear-cloudflare-cache-curl
+      run: |
+        curl -X POST "https://api.cloudflare.com/client/v4/zones/c6b3b6edea51ef07edc6c9fe51cb7970/purge_cache" -H "Authorization: Bearer zM-X01vOL97F6n4v8FpDeCspgtImoRYfCCedfTOI" \
+          -H "Content-Type: application/json" \
+          --data '{"purge_everything":true}' \

@@ -1,0 +1,15 @@
+### PROTECT FILES ###
+<FilesMatch "\.(htaccess|htpasswd|ini|fla|psd|log|sh)$">
+Order Allow,Deny
+Deny from all
+</FilesMatch>
+
+RewriteEngine on
+
+RewriteRule blockchain blockchain.html
+
+RewriteRule ppa ppa.html
+
+RewriteRule design-studio designstudio.html
+
+RewriteRule go go.html
